@@ -1,2 +1,2 @@
 
-Copyright (C) 2017-2020 Bjørn Håkon Frodal
+Copyright (C) 2017-2021 Bjørn Håkon Frodal

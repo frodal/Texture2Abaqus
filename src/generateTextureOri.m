@@ -1,9 +1,10 @@
-function [cp1,cp,cp2]=generateTextureOri(filePath,pID,element)
-% Requires:
-%   MTEX (Available here:
-%   http://mtex-toolbox.github.io/download.html)
+function [cp1,cp,cp2]=generateTextureOri(filePath,pID,N)
 
 disp('Extracting texture from Auswert file')
+
+if ~exist(filePath, 'file')
+    error(['The given file does not exist: "',filePath,'"'])
+end
 
 % This should be a large number (used when texture is loaded from
 % a Auswert texture (.ori) file)
@@ -15,11 +16,6 @@ Nori=10^7;
 cp1=cell(1,pID);
 cp=cp1;
 cp2=cp1;
-
-if pID~=length(element)
-    pID=length(element);
-    disp('Warning: The number of parts is not equal to the regions with elements')
-end
 
 %% generate texture from Auswert texture file
 A=A*Nori/sum(A);
@@ -39,7 +35,7 @@ end
 %
 
 for i=1:pID
-    for j=1:length(element{i})
+    for j=1:N{i}
         n=ceil(Nori*rand);
         cp1{i}(j)=p1(n);
         cp{i}(j)=p(n);

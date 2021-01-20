@@ -1,1 +1,15 @@
+# Ignore output folder
 input/output
+output
+
+# Ignore texture files other than those listed below
+texture/*
+!texture/Texture.ori
+!texture/Xray_pf111_uncorr.dat
+!texture/Xray_pf200_uncorr.dat
+!texture/Xray_pf220_uncorr.dat
+!texture/Xray_pf311_uncorr.dat
+
+# Ignore input files other than the one listed below
+input/*
+!input/Smooth.inp
