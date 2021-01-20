@@ -1,6 +1,6 @@
 # Texture2Abaqus
 
-Generates Abaqus include files from the crystallographic texture of an alloy for crystal plasticity finite element analyses. The generated texture can be random, generated from orientation data, X-ray polefigure data or an EBSD scans.
+Generates Abaqus include files from the crystallographic texture of an alloy for crystal plasticity finite element analyses. The generated texture can be random, generated from orientation data, X-ray polefigure data or an EBSD scan.
 
 ![Mesh](Mesh.png "Example of the grain structure generated with Texture2Abaqus")
 
