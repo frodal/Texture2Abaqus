@@ -1,19 +1,18 @@
-function [cp1,cp,cp2]=generateTextureXray(fnames,pID,element)
-% Requires:
-%   MTEX (Available here:
-%   http://mtex-toolbox.github.io/download.html)
+function [cp1,cp,cp2]=generateTextureXray(fnames,pID,N)
 
 cp1=cell(1,pID);
 cp=cp1;
 cp2=cp1;
 
-if pID~=length(element)
-    pID=length(element);
-    disp('Warning: The number of parts is not equal to the regions with elements')
-end
-
 %% generate texture from X-ray data
 disp('Loading polefigure data')
+
+for i=1:length(fnames)
+    if ~exist(fnames{i}, 'file')
+        error(['The given file does not exist: "',fnames{i},'"'])
+    end
+end
+
 %Import pole figure data and create PoleFigure object
 cs = crystalSymmetry('m-3m',[4.04 4.04 4.04],'mineral','Al');
 
@@ -54,7 +53,7 @@ disp('Extracting orientations from ODF')
 
 progress(0,pID)
 for i=1:pID
-    n=length(element{i});
+    n=N{i};
     [phi1_mtex,Phi_mtex,phi2_mtex] = Euler(calcOrientations(odf,n),'Bunge');
     % converting from radians to degrees
     cp1{i} = phi1_mtex/degree;
