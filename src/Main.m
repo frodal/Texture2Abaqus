@@ -27,8 +27,8 @@ clc
 %% Input
 
 % Number of solution-dependent state variables (SDVs) and SDV number controlling element deletion
-nStatev = 34;
-nDelete = 0;
+nStatev = 30;
+nDelete = 30;
 
 % Should one grain be represented by one element or should the elements be 
 % distributed by the grain size defined below or the EBSD data
