@@ -126,13 +126,17 @@ end
 
 % Creates a new Abaqus input file with the necessary includes
 ID=fopen([path,'/',Abainput],'w');
+initFlag = true;
+elsetFlag = true;
 for i=2:length(inputLines)-1
     line = inputLines{i};
-    if iskey(line,'*End Assembly')
+    if iskey(line,'*End Assembly') && elsetFlag
+        elsetFlag = false;
         for k=1:pID
             fprintf(ID,'%s%s\n','*include, input=',elSetFileName{k});
         end
-    elseif iskey(line,'*Material')
+    elseif iskey(line,'*Material') && initFlag
+        initFlag = false;
         for k=1:pID
             fprintf(ID,'%s%s\n','*include, input=',initFileName{k});
         end
