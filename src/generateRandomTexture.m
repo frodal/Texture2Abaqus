@@ -36,11 +36,17 @@ for i=1:pID
         cp{i} = Phi_mtex/degree;
         cp2{i} = phi2_mtex/degree;
     catch
-        cp1{i}=360*rand(n,1);
-        cp{i}=180*rand(n,1);
-        cp2{i}=360*rand(n,1);
-        disp('Warning! The generated texture is not random!')
-        disp('To generate a random texture, install MTEX.')
+        cp1{i} = zeros(n,1);
+        cp{i}  = zeros(n,1);
+        cp2{i} = zeros(n,1);
+        for k=1:n
+            q = randomQuaternion();
+            R = rotationFromQuaternion(q);
+            angles = eulerFromRotation(R);
+            cp1{i}(k) = angles(1);
+            cp{i}(k)  = angles(2);
+            cp2{i}(k) = angles(3);
+        end
     end
 end
 
