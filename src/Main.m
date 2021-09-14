@@ -17,7 +17,7 @@
 %% Main script for extracting or generating texture to FEM and writing appropriate initial conditions for CP-FEM
 % Requires:
 %   MTEX (Available here: http://mtex-toolbox.github.io/download.html)
-%   The Abaqus mesh should be dependent, i.e., meshed on the part
+%   The Abaqus mesh should be dependent, i.e., meshed on the part (dependent instance)
 
 clf
 close all
@@ -26,42 +26,61 @@ clc
 
 %% Input
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Subroutine settings
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Number of solution-dependent state variables (SDVs) and SDV number controlling element deletion
 nStatev = 30;
 nDelete = 30;
 
-% Should one grain be represented by one element or should the elements be 
-% distributed by the grain size defined below or the EBSD data
-useOneElementPerGrain = true; % true or false
-% Approximate grain size in the x, y and z direction, not used for EBSD
-grainSize = [0.3, 0.3, 0.3];
-% Symmetry axes used with above grain size
-symX = false; % true or false
-symY = false; % true or false
-symZ = false; % true or false
-
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Texture generation settings (only one of the parameters below should be true)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Should the texture used be random or generated from orientations data, X-ray polefigure data or EBSD data?
 shouldGenerateRandomTexture   = true; % true or false
 shouldGenerateTextureFromOri  = false; % true or false
 shouldGenerateTextureFromXray = false; % true or false
 shouldGenerateTextureFromEBSD = false;  % true or false
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Abaqus files
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Folder where the Abaqus input file is located and its name
 Abapath  = '../input/';
 Abainput = 'Smooth.inp';
-
 % Output folder where the new Abaqus input files are written
 OutPath = '../output/';
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Texture files (only used if shouldGenerateRandomTexture == false)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Folder where the texture file(s) are located
 Texpath='../texture/';
-% The name of the Auswert texture (orientation) file
+% The name of the Auswert texture (orientation) file (only used if shouldGenerateTextureFromOri == true)
 ORIinput='Texture.ori';
-% The polefigure data prefix (X-ray data)
+% The polefigure data prefix (X-ray data) (only used if shouldGenerateTextureFromXray == true)
 fnamesPrefix = 'Xray';
-% The name of the EBSD data file
+% The name of the EBSD data file (only used if shouldGenerateTextureFromEBSD == true)
 EBSDinput = 'EBSD.ang';
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Grain structure settings (only used if shouldGenerateTextureFromEBSD == false)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Should one grain be represented by one element or should the elements be 
+% distributed by the grain size defined below or the EBSD data
+useOneElementPerGrain = true; % true or false
+% Approximate grain size in the x, y and z direction, not used for EBSD 
+% (only used if useOneElementPerGrain == false and shouldGenerateTextureFromEBSD == false)
+grainSize = [0.3, 0.3, 0.3];
+% Symmetry axes used with above grain size 
+% (only used if useOneElementPerGrain == false and shouldGenerateTextureFromEBSD == false)
+symX = false; % true or false
+symY = false; % true or false
+symZ = false; % true or false
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% EBSD settings (only used if shouldGenerateTextureFromEBSD == true)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Should the x or y-axis of the EBSD data be flipped, and/or streched to 
 % fit the geometry for the Abaqus files generated
 flipX   = false; % true or false
@@ -75,8 +94,9 @@ strechY = false; % true or false
 % another plane than ED-TD, the texture is rotated in the generated files.
 % F.ex. if your EBSD scan is in the ED-ND plane the texture is rotated such
 % that the x-y plane in Abaqus corresponds to the ED-ND plane (x=ED, y=ND)
+% The CP subroutines assumes by default that the coordinate system of
+% Abaqus coincides with the material axes (x=ED, y=TD, z=ND)
 EBSDscanPlane = 'ED-ND'; % possible values 'ED-TD', 'ED-ND', 'TD-ND'
-
 % Grain cutoff size in pixels for the EBSD data, i.e., grains smaller than
 % or equal to this value will be removed
 grainSizeThreshold = 1;
@@ -85,6 +105,7 @@ confidenseIndexThreshold = 0.1;
 % EBSD misorientation thresold between different grains
 grainMisorientationThreshold = 5*degree;
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Checking for valid input
 
 validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
