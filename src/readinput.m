@@ -35,6 +35,9 @@ while ~feof(ID)
     line = fgetl(ID);
     lines{end+1} = line;
     if iskey(line,'*Part')
+        if firstElementInPart
+            pID=pID-1; % delete empty part
+        end
         firstElementInPart=true;
         firstNodeInPart=true;
         pID=pID+1;
@@ -89,6 +92,16 @@ while ~feof(ID)
             nodeCoordinate{pID}{nodeID{pID}(end)}(i-1)=str2double(temp{i});
         end
     end
+end
+
+% Delete an empty part
+if firstElementInPart
+    pID=pID-1;
+    pName = pName(1:pID);
+    elementID = elementID(1:pID);
+    nodeElementID = nodeElementID(1:pID);
+    nodeID = nodeID(1:pID);
+    nodeCoordinate = nodeCoordinate(1:pID);
 end
 
 fclose(ID);
