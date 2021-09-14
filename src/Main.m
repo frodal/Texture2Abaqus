@@ -32,7 +32,7 @@ nDelete = 30;
 
 % Should one grain be represented by one element or should the elements be 
 % distributed by the grain size defined below or the EBSD data
-useOneElementPerGrain = false; % true or false
+useOneElementPerGrain = true; % true or false
 % Approximate grain size in the x, y and z direction, not used for EBSD
 grainSize = [0.3, 0.3, 0.3];
 % Symmetry axes used with above grain size
@@ -96,15 +96,17 @@ validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,sho
 % element numbers, list of nodes and their coordinates
 [pID,pName,element,nodeElementID,nodeID,nodeCoordinate,inputLines] = readinput([Abapath,Abainput]);
 
-% Finds the element coordinate centers
-[elementCenter] = findElementCenters(pID,element,nodeElementID,nodeCoordinate);
+if ~useOneElementPerGrain
+    % Finds the element coordinate centers
+    [elementCenter] = findElementCenters(pID,element,nodeElementID,nodeCoordinate);
 
-% Finds the dimensions of the Abaqus part domain
-[partDimension,partMinCoordinate] = calcPartDomain(pID,element,nodeElementID,nodeCoordinate,grainSize);
+    % Finds the dimensions of the Abaqus part domain
+    [partDimension,partMinCoordinate] = calcPartDomain(pID,element,nodeElementID,nodeCoordinate,grainSize);
 
-% Grains along symmetry boundaries are "halfed"
-if ~shouldGenerateTextureFromEBSD
-    [partDimension,partMinCoordinate] = correctSymmetry(pID,grainSize,partDimension,partMinCoordinate,symX,symY,symZ);
+    % Grains along symmetry boundaries are "halfed"
+    if ~shouldGenerateTextureFromEBSD
+        [partDimension,partMinCoordinate] = correctSymmetry(pID,grainSize,partDimension,partMinCoordinate,symX,symY,symZ);
+    end
 end
 
 % Determines which element belonging to which grain set
