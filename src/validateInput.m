@@ -1,5 +1,5 @@
 %     Texture2Abaqus
-%     Copyright (C) 2017-2021 Bjørn Håkon Frodal
+%     Copyright (C) 2017-2022 BjÃ¸rn HÃ¥kon Frodal
 % 
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -15,8 +15,9 @@
 %     along with this program. If not, see <https://www.gnu.org/licenses/>.
 %%
 function bool = validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
-                              shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,...
-                              flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold)
+                              shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,shouldGenerateTextureFromMTEXODF,...
+                              flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold,...
+                              shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
 if nStatev<3
     error('nStatev must be 3 or greater');
@@ -56,7 +57,10 @@ end
 if shouldGenerateTextureFromEBSD~=true && shouldGenerateTextureFromEBSD~=false
     error('shouldGenerateTextureFromEBSD must be true or false')
 end
-if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD~=1
+if shouldGenerateTextureFromMTEXODF~=true && shouldGenerateTextureFromMTEXODF~=false
+    error('shouldGenerateTextureFromMTEXODF must be true or false')
+end
+if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD+shouldGenerateTextureFromMTEXODF~=1
     error('One of the texture flags should be true, while the others should be false!')
 end
 if flipX~=true && flipX~=false
@@ -82,6 +86,15 @@ if confidenseIndexThreshold<0
 end
 if grainMisorientationThreshold<=0
     error('grainMisorientationThreshold must be greater than 0');
+end
+if nTaylorGrainsPerIntegrationPoint<1
+    error('nTaylorGrainsPerIntegrationPoint must be 1 or greater');
+end
+if shouldUseFCTaylorHomogenization~=true && shouldUseFCTaylorHomogenization~=false
+    error('shouldUseFCTaylorHomogenization must be true or false')
+end
+if shouldUseFCTaylorHomogenization==true && shouldGenerateTextureFromEBSD==true
+    error('Can not use the Taylor homogenization approach with an EBSD map!')
 end
 bool = true;
 

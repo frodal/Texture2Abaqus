@@ -1,5 +1,5 @@
 %     Texture2Abaqus
-%     Copyright (C) 2017-2021 Bjørn Håkon Frodal
+%     Copyright (C) 2017-2022 BjÃ¸rn HÃ¥kon Frodal
 % 
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -32,6 +32,14 @@ clc
 % Number of solution-dependent state variables (SDVs) and SDV number controlling element deletion
 nStatev = 30;
 nDelete = 30;
+% Should the FC-Taylor homogenization approach in the SCMM-hypo subroutine
+% be used with nTaylorGrainsPerIntegrationPoint number of grains in each
+% integration point (Note that the total number of SDV's in the subroutine
+% will be equal to (nStatev+6)*nTaylorGrainsPerIntegrationPoint if
+% shouldUseFCTaylorHomogenization is true and otherwise equal to nStatev)
+% This option can't be used together with shouldGenerateTextureFromEBSD = true
+shouldUseFCTaylorHomogenization = false;
+nTaylorGrainsPerIntegrationPoint = 8;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Texture generation settings (only one of the parameters below should be true)
@@ -41,6 +49,7 @@ shouldGenerateRandomTexture   = true; % true or false
 shouldGenerateTextureFromOri  = false; % true or false
 shouldGenerateTextureFromXray = false; % true or false
 shouldGenerateTextureFromEBSD = false;  % true or false
+shouldGenerateTextureFromMTEXODF  = false; % true or false
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Abaqus files
@@ -79,6 +88,25 @@ symY = false; % true or false
 symZ = false; % true or false
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MTEX ODF (only used if shouldGenerateTextureFromMTEXODF == true)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+cs = crystalSymmetry('cubic');
+ss = specimenSymmetry('orthorhombic');
+components = [...
+  orientation.byEuler(35*degree,90*degree,45*degree,cs,ss),...
+  orientation.goss(cs,ss),...
+  orientation.brass(cs,ss),...
+  orientation.cube(cs,ss),...
+  orientation.cubeND22(cs,ss),...
+  orientation.cubeND45(cs,ss),...
+  orientation.cubeRD(cs,ss),...
+  orientation.copper(cs,ss),...
+  orientation.PLage(cs,ss),...
+  orientation.QLage(cs,ss),...
+  ];
+odf = unimodalODF(components(4),'halfwidth',10.0*degree);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % EBSD settings (only used if shouldGenerateTextureFromEBSD == true)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Should the x or y-axis of the EBSD data be flipped, and/or streched to 
@@ -109,8 +137,9 @@ grainMisorientationThreshold = 5*degree;
 %% Checking for valid input
 
 validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
-              shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,...
-              flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold);
+              shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,shouldGenerateTextureFromMTEXODF,...
+              flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold,...
+              shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 
 %% Reading Abaqus input file, extracting information and distributing elements in grains
 % Read Abaqus file to find number of parts, parts name, lists of
@@ -142,25 +171,27 @@ end
 
 %% Extracting or generating texture for the model
 % Generating Euler angles
-if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD~=1
+if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD+shouldGenerateTextureFromMTEXODF~=1
     error('One of the texture flags should be true, while the others should be false!');
 elseif shouldGenerateRandomTexture
-    [phi1, PHI, phi2] = generateRandomTexture(pID,NGrainSets);
+    [phi1, PHI, phi2] = generateRandomTexture(pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 elseif shouldGenerateTextureFromOri
-    [phi1, PHI, phi2] = generateTextureOri([Texpath,ORIinput],pID,NGrainSets);
+    [phi1, PHI, phi2] = generateTextureOri([Texpath,ORIinput],pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 elseif shouldGenerateTextureFromXray
     fnames = {  fullfile(Texpath, [fnamesPrefix '_pf111_uncorr.dat']),...
                 fullfile(Texpath, [fnamesPrefix '_pf200_uncorr.dat']),...
                 fullfile(Texpath, [fnamesPrefix '_pf220_uncorr.dat']),...
                 fullfile(Texpath, [fnamesPrefix '_pf311_uncorr.dat']) };
-    [phi1, PHI, phi2] = generateTextureXray(fnames,pID,NGrainSets);
+    [phi1, PHI, phi2] = generateTextureXray(fnames,pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 elseif shouldGenerateTextureFromEBSD
     [phi1, PHI, phi2] = generateTextureEBSD(pID,grainsEBSD);
+elseif shouldGenerateTextureFromMTEXODF
+    [phi1, PHI, phi2] = generateTextureFromMTEXODF(odf,pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 end
 
 %% Write additional Abaqus files
 % Write initial conditions and element sets to be used in the simulation
-writeabaqus(OutPath,Abapath,Abainput,pID,pName,GrainSet,phi1,PHI,phi2,nStatev,nDelete,inputLines)
+writeabaqus(OutPath,Abapath,Abainput,pID,pName,GrainSet,phi1,PHI,phi2,nStatev,nDelete,inputLines,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
 disp('Done!')
 

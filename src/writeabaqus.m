@@ -1,5 +1,5 @@
 %     Texture2Abaqus
-%     Copyright (C) 2017-2021 Bjørn Håkon Frodal
+%     Copyright (C) 2017-2022 BjÃ¸rn HÃ¥kon Frodal
 % 
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -14,7 +14,7 @@
 %     You should have received a copy of the GNU General Public License
 %     along with this program. If not, see <https://www.gnu.org/licenses/>.
 %%
-function []=writeabaqus(OutPath,Abapath,Abainput,pID,pName,GrainSet,phi1,PHI,phi2,nStatev,nDelete,inputLines)
+function []=writeabaqus(OutPath,Abapath,Abainput,pID,pName,GrainSet,phi1,PHI,phi2,nStatev,nDelete,inputLines,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
 disp('Writing new Abaqus files')
 
@@ -41,8 +41,15 @@ for k=1:pID
     end
 end
 
+NgrainsPerInt = 1;
+if shouldUseFCTaylorHomogenization
+    NgrainsPerInt = nTaylorGrainsPerIntegrationPoint;
+    nStatev = nStatev+6;
+end
+
 %%
 for k=1:pID
+    Nelements = length(phi1{k})/NgrainsPerInt;
     %% Writing Abaqus input
     % Writing initial conditions
     ID=fopen([path,'/',initFileName{k}],'w');
@@ -53,27 +60,33 @@ for k=1:pID
     fprintf(ID,'%s \n','**------------------------------------------------------------------------------');
     fprintf(ID,'%s \n','*Initial conditions, type=SOLUTION');
     fprintf(ID,'%s ','** elset, phi1, PHI, phi2');
-    
-    for i=1:length(phi1{k})
+    for i=1:Nelements
         if ~isempty(GrainSet{k,i})
             fprintf(ID,'\n');
-            fprintf(ID,'%s%d%s%d, %6.2f, %6.2f, %6.2f,','Grain-Set-',k,'-',i,phi1{k}(i),PHI{k}(i),phi2{k}(i));
-            for j=4:nStatev
-                if j==nDelete
-                    if j==nStatev
-                        fprintf(ID,' %d',1);
-                    elseif mod(j+1,8)==0
-                        fprintf(ID,' %d\n',1);
-                    else
-                        fprintf(ID,' %d,',1);
-                    end
+            fprintf(ID,'%s%d%s%d,','Grain-Set-',k,'-',i);
+            for j=1:nStatev*NgrainsPerInt
+                if mod(j-1,nStatev)==0 % phi1
+                    grainIndex = ceil(j/nStatev);
+                    index = i+(grainIndex-1)*Nelements;
+                    fprintf(ID,' %6.2f',phi1{k}(index));
+                elseif mod(j-2,nStatev)==0 % Phi
+                    grainIndex = ceil(j/nStatev);
+                    index = i+(grainIndex-1)*Nelements;
+                    fprintf(ID,' %6.2f',PHI{k}(index));
+                elseif mod(j-3,nStatev)==0 % phi2
+                    grainIndex = ceil(j/nStatev);
+                    index = i+(grainIndex-1)*Nelements;
+                    fprintf(ID,' %6.2f',phi2{k}(index));
+                elseif mod(j-nDelete,nStatev)==0
+                    fprintf(ID,' %d',1);
                 else
-                    if j==nStatev
-                        fprintf(ID,' %d',0);
-                    elseif mod(j+1,8)==0
-                        fprintf(ID,' %d\n',0);
+                    fprintf(ID,' %d',0);
+                end
+                if j~=nStatev*NgrainsPerInt
+                    if mod(j+1,8)==0
+                        fprintf(ID,'\n');
                     else
-                        fprintf(ID,' %d,',0);
+                        fprintf(ID,',');
                     end
                 end
             end
@@ -89,7 +102,7 @@ for k=1:pID
     fprintf(ID,'%s ','**------------------------------------------------------------------------------');
     
     if strcmp(pName{k},'')
-        for i=1:length(phi1{k})
+        for i=1:Nelements
             if ~isempty(GrainSet{k,i})
                 fprintf(ID,'\n');
                 fprintf(ID,'%s%d%s%d\n','*Elset, elset=Grain-Set-',k,'-',i);
@@ -105,7 +118,7 @@ for k=1:pID
             end
         end
     else
-        for i=1:length(phi1{k})
+        for i=1:Nelements
             if ~isempty(GrainSet{k,i})
                 fprintf(ID,'\n');
                 fprintf(ID,'%s%d%s%d%s%s%s\n','*Elset, elset=Grain-Set-',k,'-',i,', instance=',pName{k},'-1');

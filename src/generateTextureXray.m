@@ -1,5 +1,5 @@
 %     Texture2Abaqus
-%     Copyright (C) 2017-2021 Bjørn Håkon Frodal
+%     Copyright (C) 2017-2022 BjÃ¸rn HÃ¥kon Frodal
 % 
 %     This program is free software: you can redistribute it and/or modify
 %     it under the terms of the GNU General Public License as published by
@@ -14,11 +14,7 @@
 %     You should have received a copy of the GNU General Public License
 %     along with this program. If not, see <https://www.gnu.org/licenses/>.
 %%
-function [cp1,cp,cp2]=generateTextureXray(fnames,pID,N)
-
-cp1=cell(1,pID);
-cp=cp1;
-cp2=cp1;
+function [cp1,cp,cp2]=generateTextureXray(fnames,pID,N,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
 %% generate texture from X-ray data
 disp('Loading polefigure data')
@@ -65,17 +61,7 @@ odf = calcODF(pfs);
 odf.SS = ssO;
 
 %% Extract orientations from ODF
-disp('Extracting orientations from ODF')
 
-progress(0,pID)
-for i=1:pID
-    n=N{i};
-    [phi1_mtex,Phi_mtex,phi2_mtex] = Euler(calcOrientations(odf,n),'Bunge');
-    % converting from radians to degrees
-    cp1{i} = phi1_mtex/degree;
-    cp{i} = Phi_mtex/degree;
-    cp2{i} = phi2_mtex/degree;
-    progress(i,pID)
-end
+[cp1,cp,cp2]=generateTextureFromMTEXODF(odf,pID,N,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 
 end

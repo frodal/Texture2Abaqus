@@ -14,20 +14,10 @@
 %     You should have received a copy of the GNU General Public License
 %     along with this program. If not, see <https://www.gnu.org/licenses/>.
 %%
-function [cp1,cp,cp2]=generateTextureOri(filePath,pID,N,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
-
-disp('Extracting texture from Auswert file')
-
-if ~exist(filePath, 'file')
-    error(['The given file does not exist: "',filePath,'"'])
-end
-
-% This should be a large number (used when texture is loaded from
-% a Auswert texture (.ori) file)
-Nori=10^7;
-
-% Load Euler angles and weights from Auswert texture file
-[phi1,PHI,phi2,A]=importORI(filePath);
+function [cp1,cp,cp2]=generateTextureFromMTEXODF(odf,pID,N,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
+% Requires:
+%   MTEX (Available here:
+%   http://mtex-toolbox.github.io/download.html)
 
 cp1=cell(1,pID);
 cp=cp1;
@@ -38,30 +28,18 @@ if shouldUseFCTaylorHomogenization
     NgrainsPerInt = nTaylorGrainsPerIntegrationPoint;
 end
 
-%% generate texture from Auswert texture file
-A=A*Nori/sum(A);
-A=round(A);
-Nori=sum(A);
+%% Extract orientations from ODF
+disp('Extracting orientations from ODF')
 
-p1=[];
-p=p1;
-p2=p1;
-
-for i=1:length(phi1)
-    p1(end+1:end+A(i))=phi1(i);
-    p(end+1:end+A(i))=PHI(i);
-    p2(end+1:end+A(i))=phi2(i);
-end
-
-%
-
+progress(0,pID)
 for i=1:pID
-    for j=1:N{i}*NgrainsPerInt
-        n=ceil(Nori*rand);
-        cp1{i}(j)=p1(n);
-        cp{i}(j)=p(n);
-        cp2{i}(j)=p2(n);
-    end
+    n=N{i}*NgrainsPerInt;
+    [phi1_mtex,Phi_mtex,phi2_mtex] = Euler(calcOrientations(odf,n),'Bunge');
+    % converting from radians to degrees
+    cp1{i} = phi1_mtex/degree;
+    cp{i} = Phi_mtex/degree;
+    cp2{i} = phi2_mtex/degree;
+    progress(i,pID)
 end
 
 end
