@@ -49,6 +49,7 @@ shouldGenerateRandomTexture   = true; % true or false
 shouldGenerateTextureFromOri  = false; % true or false
 shouldGenerateTextureFromXray = false; % true or false
 shouldGenerateTextureFromEBSD = false;  % true or false
+shouldGenerateTextureFromMTEXODF  = false; % true or false
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Abaqus files
@@ -87,6 +88,25 @@ symY = false; % true or false
 symZ = false; % true or false
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% MTEX ODF (only used if shouldGenerateTextureFromMTEXODF == true)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+cs = crystalSymmetry('cubic');
+ss = specimenSymmetry('orthorhombic');
+components = [...
+  orientation.byEuler(35*degree,90*degree,45*degree,cs,ss),...
+  orientation.goss(cs,ss),...
+  orientation.brass(cs,ss),...
+  orientation.cube(cs,ss),...
+  orientation.cubeND22(cs,ss),...
+  orientation.cubeND45(cs,ss),...
+  orientation.cubeRD(cs,ss),...
+  orientation.copper(cs,ss),...
+  orientation.PLage(cs,ss),...
+  orientation.QLage(cs,ss),...
+  ];
+odf = unimodalODF(components(4),'halfwidth',10.0*degree);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % EBSD settings (only used if shouldGenerateTextureFromEBSD == true)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Should the x or y-axis of the EBSD data be flipped, and/or streched to 
@@ -117,7 +137,7 @@ grainMisorientationThreshold = 5*degree;
 %% Checking for valid input
 
 validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
-              shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,...
+              shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,shouldGenerateTextureFromMTEXODF,...
               flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold,...
               shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 
@@ -151,7 +171,7 @@ end
 
 %% Extracting or generating texture for the model
 % Generating Euler angles
-if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD~=1
+if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD+shouldGenerateTextureFromMTEXODF~=1
     error('One of the texture flags should be true, while the others should be false!');
 elseif shouldGenerateRandomTexture
     [phi1, PHI, phi2] = generateRandomTexture(pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
@@ -165,6 +185,8 @@ elseif shouldGenerateTextureFromXray
     [phi1, PHI, phi2] = generateTextureXray(fnames,pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 elseif shouldGenerateTextureFromEBSD
     [phi1, PHI, phi2] = generateTextureEBSD(pID,grainsEBSD);
+elseif shouldGenerateTextureFromMTEXODF
+    [phi1, PHI, phi2] = generateTextureFromMTEXODF(odf,pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 end
 
 %% Write additional Abaqus files

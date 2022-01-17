@@ -15,7 +15,7 @@
 %     along with this program. If not, see <https://www.gnu.org/licenses/>.
 %%
 function bool = validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
-                              shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,...
+                              shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,shouldGenerateTextureFromMTEXODF,...
                               flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold,...
                               shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
@@ -57,7 +57,10 @@ end
 if shouldGenerateTextureFromEBSD~=true && shouldGenerateTextureFromEBSD~=false
     error('shouldGenerateTextureFromEBSD must be true or false')
 end
-if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD~=1
+if shouldGenerateTextureFromMTEXODF~=true && shouldGenerateTextureFromMTEXODF~=false
+    error('shouldGenerateTextureFromMTEXODF must be true or false')
+end
+if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD+shouldGenerateTextureFromMTEXODF~=1
     error('One of the texture flags should be true, while the others should be false!')
 end
 if flipX~=true && flipX~=false
