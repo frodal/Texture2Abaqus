@@ -14,11 +14,16 @@
 %     You should have received a copy of the GNU General Public License
 %     along with this program. If not, see <https://www.gnu.org/licenses/>.
 %%
-function [cp1,cp,cp2]=generateTextureXray(fnames,pID,N)
+function [cp1,cp,cp2]=generateTextureXray(fnames,pID,N,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
 cp1=cell(1,pID);
 cp=cp1;
 cp2=cp1;
+
+NgrainsPerInt = 1;
+if shouldUseFCTaylorHomogenization
+    NgrainsPerInt = nTaylorGrainsPerIntegrationPoint;
+end
 
 %% generate texture from X-ray data
 disp('Loading polefigure data')
@@ -69,7 +74,7 @@ disp('Extracting orientations from ODF')
 
 progress(0,pID)
 for i=1:pID
-    n=N{i};
+    n=N{i}*NgrainsPerInt;
     [phi1_mtex,Phi_mtex,phi2_mtex] = Euler(calcOrientations(odf,n),'Bunge');
     % converting from radians to degrees
     cp1{i} = phi1_mtex/degree;

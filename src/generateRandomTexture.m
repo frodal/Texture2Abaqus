@@ -14,7 +14,7 @@
 %     You should have received a copy of the GNU General Public License
 %     along with this program. If not, see <https://www.gnu.org/licenses/>.
 %%
-function [cp1,cp,cp2]=generateRandomTexture(pID,N)
+function [cp1,cp,cp2]=generateRandomTexture(pID,N,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 % Requires:
 %   MTEX (Available here:
 %   http://mtex-toolbox.github.io/download.html)
@@ -23,12 +23,17 @@ cp1=cell(1,pID);
 cp=cp1;
 cp2=cp1;
 
+NgrainsPerInt = 1;
+if shouldUseFCTaylorHomogenization
+    NgrainsPerInt = nTaylorGrainsPerIntegrationPoint;
+end
+
 %% generate random texture
 
 disp('Generating random texture')
 
 for i=1:pID
-    n=N{i};
+    n=N{i}*NgrainsPerInt;
     try
         [phi1_mtex,Phi_mtex,phi2_mtex] = Euler(calcOrientations(uniformODF,n),'Bunge');
         % converting from radians to degrees

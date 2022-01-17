@@ -16,7 +16,8 @@
 %%
 function bool = validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
                               shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,...
-                              flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold)
+                              flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold,...
+                              shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
 if nStatev<3
     error('nStatev must be 3 or greater');
@@ -82,6 +83,15 @@ if confidenseIndexThreshold<0
 end
 if grainMisorientationThreshold<=0
     error('grainMisorientationThreshold must be greater than 0');
+end
+if nTaylorGrainsPerIntegrationPoint<1
+    error('nTaylorGrainsPerIntegrationPoint must be 1 or greater');
+end
+if shouldUseFCTaylorHomogenization~=true && shouldUseFCTaylorHomogenization~=false
+    error('shouldUseFCTaylorHomogenization must be true or false')
+end
+if shouldUseFCTaylorHomogenization==true && shouldGenerateTextureFromEBSD==true
+    error('Can not use the Taylor homogenization approach with an EBSD map!')
 end
 bool = true;
 

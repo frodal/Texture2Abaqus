@@ -32,6 +32,14 @@ clc
 % Number of solution-dependent state variables (SDVs) and SDV number controlling element deletion
 nStatev = 30;
 nDelete = 30;
+% Should the FC-Taylor homogenization approach in the SCMM-hypo subroutine
+% be used with nTaylorGrainsPerIntegrationPoint number of grains in each
+% integration point (Note that the total number of SDV's in the subroutine
+% will be equal to (nStatev+6)*nTaylorGrainsPerIntegrationPoint if
+% shouldUseFCTaylorHomogenization is true and otherwise equal to nStatev)
+% This option can't be used together with shouldGenerateTextureFromEBSD = true
+shouldUseFCTaylorHomogenization = false;
+nTaylorGrainsPerIntegrationPoint = 8;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Texture generation settings (only one of the parameters below should be true)
@@ -110,7 +118,8 @@ grainMisorientationThreshold = 5*degree;
 
 validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
               shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,...
-              flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold);
+              flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold,...
+              shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 
 %% Reading Abaqus input file, extracting information and distributing elements in grains
 % Read Abaqus file to find number of parts, parts name, lists of
@@ -145,22 +154,22 @@ end
 if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD~=1
     error('One of the texture flags should be true, while the others should be false!');
 elseif shouldGenerateRandomTexture
-    [phi1, PHI, phi2] = generateRandomTexture(pID,NGrainSets);
+    [phi1, PHI, phi2] = generateRandomTexture(pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 elseif shouldGenerateTextureFromOri
-    [phi1, PHI, phi2] = generateTextureOri([Texpath,ORIinput],pID,NGrainSets);
+    [phi1, PHI, phi2] = generateTextureOri([Texpath,ORIinput],pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 elseif shouldGenerateTextureFromXray
     fnames = {  fullfile(Texpath, [fnamesPrefix '_pf111_uncorr.dat']),...
                 fullfile(Texpath, [fnamesPrefix '_pf200_uncorr.dat']),...
                 fullfile(Texpath, [fnamesPrefix '_pf220_uncorr.dat']),...
                 fullfile(Texpath, [fnamesPrefix '_pf311_uncorr.dat']) };
-    [phi1, PHI, phi2] = generateTextureXray(fnames,pID,NGrainSets);
+    [phi1, PHI, phi2] = generateTextureXray(fnames,pID,NGrainSets,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
 elseif shouldGenerateTextureFromEBSD
     [phi1, PHI, phi2] = generateTextureEBSD(pID,grainsEBSD);
 end
 
 %% Write additional Abaqus files
 % Write initial conditions and element sets to be used in the simulation
-writeabaqus(OutPath,Abapath,Abainput,pID,pName,GrainSet,phi1,PHI,phi2,nStatev,nDelete,inputLines)
+writeabaqus(OutPath,Abapath,Abainput,pID,pName,GrainSet,phi1,PHI,phi2,nStatev,nDelete,inputLines,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
 disp('Done!')
 

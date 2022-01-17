@@ -14,7 +14,7 @@
 %     You should have received a copy of the GNU General Public License
 %     along with this program. If not, see <https://www.gnu.org/licenses/>.
 %%
-function [cp1,cp,cp2]=generateTextureOri(filePath,pID,N)
+function [cp1,cp,cp2]=generateTextureOri(filePath,pID,N,shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
 
 disp('Extracting texture from Auswert file')
 
@@ -32,6 +32,11 @@ Nori=10^7;
 cp1=cell(1,pID);
 cp=cp1;
 cp2=cp1;
+
+NgrainsPerInt = 1;
+if shouldUseFCTaylorHomogenization
+    NgrainsPerInt = nTaylorGrainsPerIntegrationPoint;
+end
 
 %% generate texture from Auswert texture file
 A=A*Nori/sum(A);
@@ -51,7 +56,7 @@ end
 %
 
 for i=1:pID
-    for j=1:N{i}
+    for j=1:N{i}*NgrainsPerInt
         n=ceil(Nori*rand);
         cp1{i}(j)=p1(n);
         cp{i}(j)=p(n);
