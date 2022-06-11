@@ -77,7 +77,7 @@ for k=1:pID
                     grainIndex = ceil(j/nStatev);
                     index = i+(grainIndex-1)*Nelements;
                     fprintf(ID,' %6.2f',phi2{k}(index));
-                elseif mod(j-nDelete,nStatev)==0
+                elseif mod(j-nDelete,nStatev)==0 && nDelete>0
                     fprintf(ID,' %d',1);
                 else
                     fprintf(ID,' %d',0);
