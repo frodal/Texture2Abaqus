@@ -1,6 +1,6 @@
 # Texture2Abaqus
 
-Generates Abaqus include files from the crystallographic texture of an alloy for crystal plasticity finite element analyses. The generated texture can be random, generated from orientation data, X-ray polefigure data or an EBSD scan. The Abaqus include files generated are supposed to be used with a user-defined material subroutine, where the three first solution dependent satate variables are the Bunge Euler angles. The Texture2Abaqus framework currently supports dependent meshes in Abaqus.
+Generates Abaqus include files from the crystallographic texture of an alloy for crystal plasticity finite element analyses. The generated texture can be random, generated from orientation data, X-ray polefigure data or an EBSD scan. The Abaqus include files generated are supposed to be used with a user-defined material subroutine, where the three first solution dependent state variables are the Bunge Euler angles. The Texture2Abaqus framework currently supports dependent meshes in Abaqus.
 
 ![Mesh](Mesh.png "Example of the grain structure generated with Texture2Abaqus")
 
