@@ -37,8 +37,16 @@ for id=1:pID
     
     if id<=length(element)
         for el=element{id}
-            i=ceil((elementCenter{id,el}(1)-partMinCoordinate{id}(1))/grainSize(1));
-            j=ceil((elementCenter{id,el}(2)-partMinCoordinate{id}(2))/grainSize(2));
+            if N(1)>1
+                i=ceil((elementCenter{id,el}(1)-partMinCoordinate{id}(1))/grainSize(1));
+            else
+                i=1;
+            end
+            if N(2)>1
+                j=ceil((elementCenter{id,el}(2)-partMinCoordinate{id}(2))/grainSize(2));
+            else
+                j=1;
+            end
             if N(3)>1
                 k=ceil((elementCenter{id,el}(3)-partMinCoordinate{id}(3))/grainSize(3));
             else
