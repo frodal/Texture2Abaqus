@@ -86,6 +86,12 @@ grainSize = [0.3, 0.3, 0.3];
 symX = false; % true or false
 symY = false; % true or false
 symZ = false; % true or false
+% Should the grain structure come from Dream3D
+% (only used if useOneElementPerGrain == false and shouldGenerateTextureFromEBSD == false)
+useDream3DGrainDistribution = false;
+% Folder where the Dream3D input file is located and its name
+Dream3Dpath  = '../input/';
+Dream3Dinput = 'equiaxed_100_cube.dat';
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % MTEX ODF (only used if shouldGenerateTextureFromMTEXODF == true)
@@ -139,7 +145,7 @@ grainMisorientationThreshold = 5*degree;
 validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
               shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,shouldGenerateTextureFromMTEXODF,...
               flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold,...
-              shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint);
+              shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint,useDream3DGrainDistribution);
 
 %% Reading Abaqus input file, extracting information and distributing elements in grains
 % Read Abaqus file to find number of parts, parts name, lists of
@@ -165,6 +171,8 @@ if shouldGenerateTextureFromEBSD
     [GrainSet,NGrainSets] = distributeElementsInGrainsFromEBSD(pID,element,elementCenter,partDimension,partMinCoordinate,grainsEBSD,flipX,flipY,strechX,strechY);
 elseif useOneElementPerGrain
     [GrainSet,NGrainSets] = distributeOneElementOneGrains(pID,element);
+elseif useDream3DGrainDistribution
+    [GrainSet,NGrainSets] = distributeElementsInGrainsFromDream3D(pID,element,elementCenter,partDimension,partMinCoordinate,grainSize,[Dream3Dpath,Dream3Dinput]);
 else
     [GrainSet,NGrainSets] = distributeElementsInGrains(pID,element,elementCenter,partDimension,partMinCoordinate,grainSize);
 end

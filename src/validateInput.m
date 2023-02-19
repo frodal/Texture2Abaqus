@@ -17,7 +17,7 @@
 function bool = validateInput(nStatev,nDelete,useOneElementPerGrain,grainSize,symX,symY,symZ,shouldGenerateRandomTexture,...
                               shouldGenerateTextureFromOri,shouldGenerateTextureFromXray,shouldGenerateTextureFromEBSD,shouldGenerateTextureFromMTEXODF,...
                               flipX,flipY,strechX,strechY,EBSDscanPlane,grainSizeThreshold,confidenseIndexThreshold,grainMisorientationThreshold,...
-                              shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint)
+                              shouldUseFCTaylorHomogenization,nTaylorGrainsPerIntegrationPoint,useDream3DGrainDistribution)
 
 if nStatev<3
     error('nStatev must be 3 or greater');
@@ -26,6 +26,9 @@ if nDelete<0
     error('nDelete must be 0 or greater');
 end
 if useOneElementPerGrain~=true && useOneElementPerGrain~=false
+    error('useOneElementPerGrain must be true or false')
+end
+if useDream3DGrainDistribution~=true && useDream3DGrainDistribution~=false
     error('useOneElementPerGrain must be true or false')
 end
 if length(grainSize)~=3
@@ -62,6 +65,9 @@ if shouldGenerateTextureFromMTEXODF~=true && shouldGenerateTextureFromMTEXODF~=f
 end
 if shouldGenerateRandomTexture+shouldGenerateTextureFromOri+shouldGenerateTextureFromXray+shouldGenerateTextureFromEBSD+shouldGenerateTextureFromMTEXODF~=1
     error('One of the texture flags should be true, while the others should be false!')
+end
+if useOneElementPerGrain+useDream3DGrainDistribution+shouldGenerateTextureFromEBSD~=1
+    error('Only one of the useOneElementPerGrain, useDream3DGrainDistribution, shouldGenerateTextureFromEBSD flags should be true, while the others should be false!')
 end
 if flipX~=true && flipX~=false
     error('flipX must be true or false')
